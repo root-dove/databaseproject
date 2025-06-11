@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>게시글 상세</title>
+</head>
+<body>
+  <div id="post"></div>
+
+  <h3>💬 댓글</h3>
+  <ul id="comment-list"></ul>
+
+  <form id="comment-form" style="display: none;">
+    <input type="text" id="comment-content" placeholder="댓글 입력">
+    <button type="submit">등록</button>
+  </form>
+
+  <script>
+  const urlParams = new URLSearchParams(location.search);
+  const postId = urlParams.get('id');
+  let currentUser = null;
+
+  async function loadPost() {
+    const res = await fetch(`/api/posts/${postId}`);
+    if (!res.ok) {
+      document.getElementById('post').innerHTML = '<p>게시글을 불러올 수 없습니다.</p>';
+      return;
+    }
+
+    const { post, comments } = await res.json();
+
+    document.getElementById('post').innerHTML = `
+      <h2>${post.title}</h2>
+      <p>👤 ${post.username} | 🕒 ${post.created_at.slice(0, 10)} | ❤️ ${post.likes}</p>
+      <p>${post.content}</p>
+    `;comments
+
+    const list = document.getElementById('comment-list');
+    list.innerHTML = '';
+    comments.forEach(c => {
+      const li = document.createElement('li');
+      li.innerHTML = `🗨️ ${c.username} (${c.created_at.slice(0, 10)}): ${c.content}`;
+
+      if (currentUser && currentUser.id === c.user_id) {
+        const btn = document.createElement('button');
+        btn.textContent = '삭제';
+        btn.onclick = () => deleteComment(postId, c.id);
+        li.appendChild(btn);
+      }
+
+      list.appendChild(li);
+    });
+    console.log(comments); // 댓글 확인
+    console.log(currentUser); // 로그인 사용자 확인
+
+  }
+
+  async function checkLogin() {
+    const res = await fetch('/api/auth/me');
+    if (res.ok) {
+      currentUser = await res.json(); // 로그인 사용자 정보 저장
+      document.getElementById('comment-form').style.display = 'block';
+    }
+  }
+
+  document.getElementById('comment-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const content = document.getElementById('comment-content').value;
+    const res = await fetch(`/api/posts/${postId}/comments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content })
+    });
+    if (res.ok) {
+      document.getElementById('comment-content').value = '';
+      loadPost();
+    } else {
+      alert('댓글 등록 실패');
+    }
+  };
+
+  function deleteComment(postId, commentId) {
+    if (!confirm('댓글을 삭제할까요?')) return;
+
+    fetch(`/api/posts/${postId}/comments/${commentId}`, {
+      method: 'DELETE'
+    }).then(res => {
+      if (res.ok) loadPost();
+      else alert('삭제 실패');
+    });
+  }
+
+  loadPost();
+  checkLogin();
+</script>
+
+</body>
+</html>

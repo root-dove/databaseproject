@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>글쓰기</title>
+</head>
+<body>
+  <h1>📄 글쓰기</h1>
+  <form id="write-form">
+    <input type="text" id="title" placeholder="제목" required><br><br>
+    <textarea id="content" placeholder="내용" rows="10" cols="50" required></textarea><br><br>
+    <button type="submit">작성 완료</button>
+  </form>
+
+  <script>
+    async function checkLogin() {
+      const res = await fetch('/api/auth/me');
+      if (!res.ok) {
+        alert('로그인이 필요합니다.');
+        location.href = '/login.html';
+      }
+    }
+
+    document.getElementById('write-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const title = document.getElementById('title').value;
+      const content = document.getElementById('content').value;
+
+      const res = await fetch('/api/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, content })
+      });
+
+      if (res.ok) {
+        alert('글이 등록되었습니다!');
+        location.href = '/';
+      } else {
+        const data = await res.json();
+        alert('등록 실패: ' + (data.error || '서버 오류'));
+      }
+    };
+
+    checkLogin();
+  </script>
+</body>
+</html>

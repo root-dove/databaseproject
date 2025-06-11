@@ -1,0 +1,165 @@
+<!-- public/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Web Board</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; }
+    header { display: flex; justify-content: space-between; align-items: center; }
+    nav button { margin-left: 1rem; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { border: 1px solid #ccc; padding: 0.5rem; text-align: left; }
+    .search { margin-top: 1rem; }
+    .pagination, .per-page { margin-top: 1rem; }
+    .pagination button, .per-page select { margin-right: 0.5rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📋 게시판</h1>
+        <nav id="auth-section">
+            <!-- 로그인 상태에 따라 내용 동적으로 채움 -->
+        </nav>
+  </header>
+
+  <div class="search">
+    <input type="text" id="search" placeholder="검색어 입력...">
+    <select id="search-type">
+      <option value="title">제목</option>
+      <option value="username">작성자</option>
+      <option value="content">내용</option>
+      <option value="created_at">작성일</option>
+      <option value="comments">댓글</option>
+    </select>
+    <button onclick="searchPosts()">검색</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>번호</th>
+        <th>제목</th>
+        <th>작성자</th>
+        <th>작성일</th>
+        <th>좋아요</th>
+        <th>댓글</th>
+        <th>삭제</th>
+      </tr>
+    </thead>
+    <tbody id="post-list">
+      <!-- 게시글이 여기에 채워집니다 -->
+    </tbody>
+  </table>
+
+  <div class="per-page">
+    <label>페이지당 게시글 수: </label>
+    <select id="per-page" onchange="fetchPosts(1)">
+      <option>10</option>
+      <option>20</option>
+      <option>30</option>
+      <option>40</option>
+      <option>50</option>
+    </select>
+    <button onclick="location.href='write.html'" style="float: right;">글쓰기</button>
+  </div>
+
+  <div class="pagination" id="pagination">
+    <!-- 페이지 버튼 -->
+  </div>
+
+  <script>
+    let currentPage = 1;
+
+    async function checkLogin() {
+        const nav = document.getElementById('auth-section');
+        try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+            const user = await res.json();
+            nav.innerHTML = `
+            <span>👋 안녕하세요, <b>${user.username}</b>님</span>
+            <button onclick="logout()">로그아웃</button>
+            `;
+        } else {
+            nav.innerHTML = `
+            <button onclick="location.href='login.html'">로그인</button>
+            <button onclick="location.href='signup.html'">회원가입</button>
+            `;
+        }
+        } catch {
+        nav.innerHTML = `
+            <button onclick="location.href='login.html'">로그인</button>
+            <button onclick="location.href='signup.html'">회원가입</button>
+        `;
+        }
+    }
+
+    function logout() {
+        fetch('/api/auth/logout', { method: 'POST' }).then(() => {
+        location.reload();
+        });
+    }
+
+    checkLogin(); // 페이지 로드시 실행
+
+
+    function fetchPosts(page) {
+      const perPage = document.getElementById('per-page').value;
+      const search = document.getElementById('search').value;
+      const type = document.getElementById('search-type').value;
+      currentPage = page;
+
+
+      
+
+      fetch(`/api/posts?page=${page}&limit=${perPage}&search=${search}&type=${type}`)
+        .then(res => res.json())
+        .then(data => {
+          const list = document.getElementById('post-list');
+          list.innerHTML = '';
+          data.posts.forEach(post => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${post.id}</td>
+              <td><a href="post.html?id=${post.id}">${post.title}</a></td>
+              <td>${post.username}</td>
+              <td>${post.created_at.slice(0,10)}</td>
+              <td><button onclick="toggleLike(${post.id})">❤️ ${post.likes}</button></td>
+              <td>${post.comments}</td>
+              <td><button onclick="deletePost(${post.id})">삭제</button></td>
+            `;
+            list.appendChild(row);
+          });
+
+          const pagination = document.getElementById('pagination');
+          pagination.innerHTML = '';
+          for (let i = 1; i <= data.totalPages; i++) {
+            const btn = document.createElement('button');
+            btn.textContent = i;
+            btn.onclick = () => fetchPosts(i);
+            if (i === page) btn.style.fontWeight = 'bold';
+            pagination.appendChild(btn);
+          }
+        });
+    }
+
+    function searchPosts() {
+      fetchPosts(1);
+    }
+
+    function toggleLike(postId) {
+      fetch(`/api/posts/${postId}/like`, { method: 'POST' })
+        .then(() => fetchPosts(currentPage));
+    }
+
+    function deletePost(postId) {
+      fetch(`/api/posts/${postId}`, { method: 'DELETE' })
+        .then(() => fetchPosts(currentPage));
+    }
+
+    fetchPosts(1);
+  </script>
+</body>
+</html>

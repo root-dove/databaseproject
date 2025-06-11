@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head><title>로그인</title></head>
+<body>
+  <h1>로그인</h1>
+  <form id="login-form">
+    <input type="text" id="username" placeholder="아이디" required><br>
+    <input type="password" id="password" placeholder="비밀번호" required><br>
+    <button type="submit">로그인</button>
+  </form>
+  <script>
+    document.getElementById('login-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          username: document.getElementById('username').value,
+          password: document.getElementById('password').value
+        })
+      });
+      if (res.ok) location.href = '/';
+      else alert('로그인 실패');
+    };
+  </script>
+</body>
+</html>
