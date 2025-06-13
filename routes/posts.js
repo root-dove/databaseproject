@@ -1,4 +1,3 @@
-// routes/posts.js
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
@@ -49,7 +48,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// 좋아요 토글 API
 router.post('/:id/like', verifyToken, async (req, res) => {
   const postId = req.params.id;
   const userId = req.user.id;
@@ -72,7 +70,6 @@ router.post('/:id/like', verifyToken, async (req, res) => {
   }
 });
 
-// 게시글 삭제 API
 router.delete('/:id', verifyToken, async (req, res) => {
   const postId = req.params.id;
   const userId = req.user.id;
@@ -89,7 +86,6 @@ router.delete('/:id', verifyToken, async (req, res) => {
   }
 });
 
-// 댓글 작성 API
 router.post('/:id/comments', verifyToken, async (req, res) => {
   const postId = req.params.id;
   const userId = req.user.id;
@@ -108,7 +104,6 @@ router.post('/:id/comments', verifyToken, async (req, res) => {
   }
 });
 
-// 댓글 삭제 API
 router.delete('/:postId/comments/:commentId', verifyToken, async (req, res) => {
   const { postId, commentId } = req.params;
   const userId = req.user.id;
@@ -150,7 +145,6 @@ router.post('/', verifyToken, async (req, res) => {
   }
 });
 
-// 게시글 상세 + 댓글 목록
 router.get('/:id', async (req, res) => {
   const postId = req.params.id;
 

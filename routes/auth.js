@@ -1,4 +1,3 @@
-// routes/auth.js
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -39,7 +38,6 @@ router.post('/logout', (req, res) => {
   res.clearCookie('token').json({ message: '로그아웃' });
 });
 
-// 현재 로그인 사용자 정보 확인
 router.get('/me', verifyToken, (req, res) => {
   res.json({ id: req.user.id, username: req.user.username });
 });

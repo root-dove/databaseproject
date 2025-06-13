@@ -50,15 +50,15 @@
 
       list.appendChild(li);
     });
-    console.log(comments); // 댓글 확인
-    console.log(currentUser); // 로그인 사용자 확인
+    console.log(comments);
+    console.log(currentUser);
 
   }
 
   async function checkLogin() {
     const res = await fetch('/api/auth/me');
     if (res.ok) {
-      currentUser = await res.json(); // 로그인 사용자 정보 저장
+      currentUser = await res.json();
       document.getElementById('comment-form').style.display = 'block';
     }
   }
